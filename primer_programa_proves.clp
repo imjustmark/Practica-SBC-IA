@@ -6,18 +6,8 @@
 
 ; Definició de les CLASSES
 
-(defclass Viaje
-    (is-a USER)
-    (role concrete)
-    (pattern-match reactive)
-    ;;; Expresa los días de duración.
-    (slot duración
-        (type INTEGER)
-        (create-accessor read-write))
-)
-
 (defclass Ciudad
-    (is-a Viaje)
+    (is-a USER)
     (role concrete)
     (pattern-match reactive)
     ;;; Expresa los días de duración.
@@ -81,7 +71,7 @@
 )
 
 (defclass Trayecto
-    (is-a Viaje)
+    (is-a USER)
     (role concrete)
     (pattern-match reactive)
     ;;; Expresa los días de duración.
@@ -129,48 +119,6 @@
     (pattern-match reactive)
 )
 
-(defclass Cliente
-    (is-a USER)
-    (role concrete)
-    (pattern-match reactive)
-    (slot está_interesado_en
-        (type INSTANCE)
-        (create-accessor read-write))
-    (multislot solicita
-        (type INSTANCE)
-        (create-accessor read-write))
-    (slot nombre
-        (type STRING)
-        (create-accessor read-write))
-    (slot presupuesto
-        (type FLOAT)
-        (create-accessor read-write))
-)
-
-(defclass Familia
-    (is-a Cliente)
-    (role concrete)
-    (pattern-match reactive)
-)
-
-(defclass Grupo
-    (is-a Cliente)
-    (role concrete)
-    (pattern-match reactive)
-)
-
-(defclass Individual
-    (is-a Cliente)
-    (role concrete)
-    (pattern-match reactive)
-)
-
-(defclass Pareja
-    (is-a Cliente)
-    (role concrete)
-    (pattern-match reactive)
-)
-
 (defclass Interés
     (is-a USER)
     (role concrete)
@@ -185,7 +133,6 @@
 (definstances instances
     (aventura of Interés (nombre "aventura"))
     (religion of Interés (nombre "religión"))
-    (juan of Individual (nombre "juan") (presupuesto 1500) (está_interesado_en [aventura]))
     (barcelona of Ciudad (nombre "barcelona"))
     (reina_sofia of Hotel (nombre "Hotel Reina Sofia") (precio 200))
     (macba of Sitio_de_Interés (nombre "MACBA") (precio 50) (satisface [aventura]))
@@ -195,7 +142,10 @@
 )
 
 ; Exportació del MAIN
-(defmodule MAIN (export ?ALL))
+(defmodule MAIN (export ?ALL)
+ (focus Preguntes)
+ (focus Seleccio)
+)
 
 ; Definició de TEMPLATES que poguem necessitar
 (deftemplate client 
@@ -221,20 +171,15 @@
 
 ; Definició de FUNCIONS
 
-(deffunction fer-pregunta (?p $?valors_permesos)
+(deffunction fer-pregunta (?p)
    (printout t ?p)
    (bind ?r (read))
    (if (lexemep ?r) 
        then (bind ?r (lowcase ?r)))
-   (while (not (member ?r ?valors_permesos)) do
-      (printout t ?p)
-      (bind ?r (read))
-      (if (lexemep ?r) 
-          then (bind ?r (lowcase ?r))))
    ?r)
 
    (deffunction pregunta-si-o-no (?p)
-   (bind ?r (fer-pregunta ?p si no yes ))
+   (bind ?r (fer-pregunta ?p))
    (if (or (eq ?r yes) (eq ?r si))
        then TRUE 
        else FALSE))
@@ -242,10 +187,11 @@
 ; Definició de REGLES
 
 ; Mòdul de PREGUNTES
+(defmodule Preguntes (import ?ALL) (export ?ALL)
 
 (defrule inici
     (declare (salience 10))
-    not (iniciat ?)
+    (not (iniciat ?))
     =>
     (printout t "Benvingut!" crlf)
     (assert(iniciat usuari))
@@ -257,18 +203,100 @@
    (if (pregunta-si-o-no "Viatges sol? (si/no) ") 
        then (assert (client (tipus individual)))
        else 
-       (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no)")
+       (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no) ")
            then (assert (client (tipus parella)))
            else 
-           (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no)")
+           (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no) ")
                  then (assert (client (tipus familia)))
                  else (assert (client (tipus grup)))
             )
         )
     )
+    (assert (tipus usuari))
 )
-       
+
+(defrule determina-pressupost-client ""
+   (iniciat ?)
+   (not (pressupost ?))
+   ?c <- (client)
+   =>
+   (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? "))
+   (while (< ?r 0) do (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? ")))
+   (modify ?c (pressupost ?r))
+   (assert (pressupost usuari)) 
+)
+
+(defrule determina-dies-client ""
+   (iniciat ?)
+   (not (dies ?))
+   ?c <- (client)
+   =>
+   (bind ?r (fer-pregunta "Quants dies vols que duri el viatge? "))
+   (while (< ?r 0) do (bind ?r (fer-pregunta "Quants dies vols que duri el viatge? ")))
+   (modify ?c (duracio-esperada ?r))
+   (assert (dies usuari)) 
+)
+
+(defrule determina-dies-per-ciutat-client ""
+   (iniciat ?)
+   (not (dies-per-ciutat ?))
+   ?c <- (client)
+   =>
+   (bind ?r (fer-pregunta "Quants dies vols estar a cada ciutat? "))
+   (while (< ?r 0) do (bind ?r (fer-pregunta "Quants dies vols estar a cada ciutat? ")))
+   (modify ?c (dies-per-ciutat ?r))
+   (assert (dies-per-ciutat usuari)) 
+)
+
+(defrule determina-num-ciutats-client ""
+    (dies ?)
+    (dies-per-ciutat ?)
+    (not (num-ciutats ?))
+    ?c <- (client (duracio-esperada ?de) (dies-per-ciutat ?dpc))
+    =>
+    (modify ?c (num-ciutats (/ ?de ?dpc)))
+    (assert (num-ciutats usuari))
+)
+)
+   
 ; Mòdul de SELECCIÓ
+(defmodule Seleccio (import ?ALL) (export ?ALL)
+
+(deftemplate dades
+    slot preu-actual
+    slot dies-actuals
+    slot num-ciutats-actual
+    multislot llocs-compatibles
+)
+
+(defrule inicialitza-viatge ""
+    (not (viatge-inicialitzat ?))
+    ?c <- (client (duracio-esperada ?de))
+    =>
+    (assert (viatge (duracio ?de)))
+    (assert (viatge-inicialitzat usuari))
+    (assert (dades))
+)
+
+(defrule troba-llocs-compatibles ""
+    (viatge-inicialitzat ?)
+    ?ll <- (object (is-a Sitio_de_Interés) (satisface ?i))
+    ?c <- (client (interesos $?li))
+    ?d <- (dades (llocs-compatibles $?ls)) 
+    =>
+    (if (member ?i ?li) then (insert$ ?ls ?i))
+)
+
+(defrule assigna-ciutats ""
+    (llocs-compatibles ?)
+    (not (ciutats-assignades) ?)
+    ?c <- (object (is-a Ciudad))
+    ?d <- (dades (llocs-compatibles $?l))
+    =>
+
+)
+
+)
 
 ; Mòdul de CONSTRUCCIÓ
 

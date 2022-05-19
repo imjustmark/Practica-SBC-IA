@@ -4,6 +4,8 @@
 ;;; Translated to CLIPS from ontology ontologia-IA-2.owl
 ;;; :Date 15/05/2022 12:36:02
 
+; Definició de les CLASSES
+
 (defclass Viaje
     (is-a USER)
     (role concrete)
@@ -178,6 +180,8 @@
         (create-accessor read-write))
 )
 
+; Definició de les INSTÀNCIES
+
 (definstances instances
     (aventura of Interés (nombre "aventura"))
     (religion of Interés (nombre "religión"))
@@ -190,25 +194,96 @@
     (raval of Sitio_de_Interés (nombre "raval") (precio 23.8) (satisface [aventura]))
 )
 
+; Exportació del MAIN
+(defmodule MAIN (export ?ALL))
 
-(defmessage-handler Sitio_de_Interés get-nombre-interes ()
-    (send ?self:satisface get-nombre)
+; Definició de TEMPLATES que poguem necessitar
+(deftemplate client 
+    (slot tipus)
+    (slot pressupost)
+    (slot duracio-esperada)
+    (slot dies-per-ciutat)
+    (slot num-ciutats)
+    (multislot interesos)
 )
 
-(defmessage-handler Cliente get-nombre-interes ()
-    (send ?self:está_interesado_en get-nombre)
+(deftemplate viatge
+    (slot preu-total)
+    (slot duracio)
+    (multislot ciutats)
+    (multislot allotjaments)
+    (multislot dies-ciutats)
+    (multislot llocs-interes)
+    (multislot transports)
 )
 
-(defrule cliente-e-interes
-    ?p1 <- (object (is-a Cliente))
+; Definició de MISSATGES entre classes
+
+; Definició de FUNCIONS
+
+(deffunction fer-pregunta (?p $?valors_permesos)
+   (printout t ?p)
+   (bind ?r (read))
+   (if (lexemep ?r) 
+       then (bind ?r (lowcase ?r)))
+   (while (not (member ?r ?valors_permesos)) do
+      (printout t ?p)
+      (bind ?r (read))
+      (if (lexemep ?r) 
+          then (bind ?r (lowcase ?r))))
+   ?r)
+
+   (deffunction pregunta-si-o-no (?p)
+   (bind ?r (fer-pregunta ?p si no yes ))
+   (if (or (eq ?r yes) (eq ?r si))
+       then TRUE 
+       else FALSE))
+
+; Definició de REGLES
+
+; Mòdul de PREGUNTES
+
+(defrule inici
+    (declare (salience 10))
+    not (iniciat ?)
     =>
-    (printout t "A " (send ?p1 get-nombre) " le gusta " (send ?p1 get-nombre-interes) crlf)
+    (printout t "Benvingut!" crlf)
+    (assert(iniciat usuari))
 )
 
-(defrule interes-y-lugar
-    ?p1 <- (object (is-a Cliente) (nombre ?n1) (está_interesado_en ?i1))
-    ?l1 <- (object (is-a Sitio_de_Interés) (satisface ?i2))
-    (test (eq ?i1 ?i2))
-    =>
-    (printout t (send ?p1 get-nombre) " debería ir a " (send ?l1 get-nombre) ", le costará " (send ?l1 get-precio) crlf)
+(defrule determina-tipus-client ""
+   (iniciat ?)
+   =>
+   (if (pregunta-si-o-no "Viatges sol? (si/no) ") 
+       then (assert (client (tipus individual)))
+       else 
+       (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no)")
+           then (assert (client (tipus parella)))
+           else 
+           (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no)")
+                 then (assert (client (tipus familia)))
+                 else (assert (client (tipus grup)))
+            )
+        )
+    )
 )
+       
+; Mòdul de SELECCIÓ
+
+; Mòdul de CONSTRUCCIÓ
+
+; Mòdul d'IMPRESIÓ dels RESULTATS
+
+;(defrule cliente-e-interes
+;    ?p1 <- (object (is-a Cliente))
+;    =>
+;    (printout t "A " (send ?p1 get-nombre) " le gusta " (send ?p1 get-nombre-interes) crlf)
+;)
+
+;(defrule interes-y-lugar
+;    ?p1 <- (object (is-a Cliente) (nombre ?n1) (está_interesado_en ?i1))
+;    ?l1 <- (object (is-a Sitio_de_Interés) (satisface ?i2))
+;    (test (eq ?i1 ?i2))
+;    =>
+;    (printout t (send ?p1 get-nombre) " debería ir a " (send ?l1 get-nombre) ", le costará " (send ?l1 get-precio) crlf)
+;)

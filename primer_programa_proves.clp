@@ -139,12 +139,58 @@
 (definstances instances
     (aventura of Interés (nombre "aventura"))
     (religion of Interés (nombre "religión"))
+    (cultura of Interés (nombre "cultura"))
+    (relax of Interés (nombre "relax"))
+    (fiesta of Interés (nombre "fiesta"))
+    (romántico of Interés (nombre "romántico"))
     (barcelona of Ciudad (nombre "barcelona"))
     (reina_sofia of Hotel (nombre "Hotel Reina Sofia") (precio 200) (esta-en [barcelona]))
     (macba of Sitio_de_Interés (nombre "MACBA") (precio 50) (satisface [religion] [aventura]) (esta-en [barcelona]))
     (sagrada_familia of Sitio_de_Interés (nombre "Sagrada Familia") (precio 100) (satisface [religion]) (esta-en [barcelona]))
     (barceloneta of Sitio_de_Interés (nombre "barceloneta") (precio 0) (satisface [aventura]) (esta-en [barcelona]))
     (raval of Sitio_de_Interés (nombre "raval") (precio 23.8) (satisface [aventura]) (esta-en [barcelona]))
+
+    (amsterdam of Ciudad (nombre "amsterdam"))
+    (the_bulldog_hotel of Hotel (nombre "The Bulldog Hotel") (precio 150) (esta-en [amsterdam]))
+    (corendon_city_hotel of Hotel (nombre "Corendon City Hotel") (precio 86) (esta-en [amsterdam]))
+    (hotel_notting_hill of Hotel (nombre "Hotel Notting Hill") (precio 131) (esta-en [amsterdam]))
+    (camping_zeeburg of Camping (nombre "Camping Zeeburg") (precio 16) (esta-en [amsterdam]))
+    (pension_homeland of Pensión (nombre "Pensión Homeland") (precio 46) (esta-en [amsterdam]))
+    (rijksmuseum of Sitio_de_Interés (nombre "Rijksmuseum") (precio 20) (satisface [cultura]) (esta-en [amsterdam]))
+    (vondelpark of Sitio_de_Interés (nombre "Vondelpark") (precio 0) (satisface [relax]) (esta-en [amsterdam]))
+
+    (paris of Ciudad (nombre "paris"))
+    (hotel_minerve of Hotel (nombre "Hotel MINERVE") (precio 105) (esta-en [paris]))
+    (hotel_le_walt of Hotel (nombre "Hotel Le Walt") (precio 307) (esta-en [paris]))
+    (enjoy_hostel of Pensión (nombre "Enjoy Hostel") (precio 82) (esta-en [paris]))
+    (torre_eiffel of Sitio_de_Interés (nombre "Torre Eiffel") (precio 40) (satisface [romántico]) (esta-en [paris]))
+    (museo_louvre of Sitio_de_Interés (nombre "Museo Louvre") (precio 20) (satisface [cultura]) (esta-en [paris]))
+    (catedral_de_notredame of Sitio_de_Interés (nombre "Catedral de Notre-Dame") (precio 0) (satisface [religión]) (esta-en [paris]))
+
+    (viena of Ciudad (nombre "viena"))
+    (boutique_hotel of Hotel (nombre "Boutique Hotel") (precio 69) (esta-en [viena]))
+    (aparthotel_adadgio of Hotel (nombre "Aparthotel Adagio") (precio 131) (esta-en [viena]))
+    (camping_wien_west of Pensión (nombre "Camping Wien West") (precio 15) (esta-en [viena]))
+    (schonbrunn_palace of Sitio_de_Interés (nombre "Schonbrunn Palace") (precio 20) (satisface [cultura]) (esta-en [viena]))
+    (st_stephen_cathedral of Sitio_de_Interés (nombre "St Stephen Cathedral") (precio 0) (satisface [religión]) (esta-en [viena]))
+
+    (roma of Ciudad (nombre "roma"))
+    (napoleon_hotel of Hotel (nombre "Napoleon Hotel") (precio 186) (esta-en [roma]))
+    (hotel_trevi of Hotel (nombre "Hotel Trevi") (precio 192) (esta-en [roma]))
+    (rome_experience_hostel of Pensión (nombre "Rome Experience Hostel") (precio 52) (esta-en [roma]))
+    (coliseo of Sitio_de_Interés (nombre "Coliseo") (precio 40) (satisface [cultura]) (esta-en [roma]))
+    (basílica_st_peter of Sitio_de_Interés (nombre "Basílica St Peter") (precio 10) (satisface [religión]) (esta-en [roma]))
+    (bike_tour_orvieto of Sitio_de_Interés (nombre "Bike Tour Orvieto") (precio 400) (satisface [aventura]) (esta-en [roma]))
+
+    (praga of Ciudad (nombre "praga"))
+    (grandium_hotel of Hotel (nombre "Grandium Hotel") (precio 96) (esta-en [praga]))
+    (aria_hotel of Hotel (nombre "Aria Hotel") (precio 233) (esta-en [praga]))
+    (prague_central_camp of Hotel (nombre "Prague Central Camp") (precio 18) (esta-en [praga]))
+    (karlovy_lazne of Sitio_de_Interés (nombre "Karlovy Lazne") (precio 20) (satisface [fiesta]) (esta-en [praga]))
+    (dancing_house of Sitio_de_Interés (nombre "Dancing House") (precio 0) (satisface [cultura]) (esta-en [praga]))
+
+
+
 )
 
 ; Exportació del MAIN

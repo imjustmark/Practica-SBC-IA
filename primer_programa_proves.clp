@@ -20,7 +20,7 @@
 )
 
 (defclass Alojamiento
-    (is-a Ciudad)
+    (is-a USER)
     (role concrete)
     (pattern-match reactive)
     (slot nombre
@@ -28,6 +28,9 @@
         (create-accessor read-write))
     (slot precio
         (type FLOAT)
+        (create-accessor read-write))
+    (slot esta-en
+        (type INSTANCE)
         (create-accessor read-write))
 )
 
@@ -56,10 +59,13 @@
 )
 
 (defclass Sitio_de_Interés
-    (is-a Ciudad)
+    (is-a USER)
     (role concrete)
     (pattern-match reactive)
-    (slot satisface
+    (multislot satisface
+        (type INSTANCE)
+        (create-accessor read-write))
+    (slot esta-en
         (type INSTANCE)
         (create-accessor read-write))
     (slot nombre
@@ -134,18 +140,15 @@
     (aventura of Interés (nombre "aventura"))
     (religion of Interés (nombre "religión"))
     (barcelona of Ciudad (nombre "barcelona"))
-    (reina_sofia of Hotel (nombre "Hotel Reina Sofia") (precio 200))
-    (macba of Sitio_de_Interés (nombre "MACBA") (precio 50) (satisface [aventura]))
-    (sagrada_familia of Sitio_de_Interés (nombre "Sagrada Familia") (precio 100) (satisface [religion]))
-    (barceloneta of Sitio_de_Interés (nombre "barceloneta") (precio 0) (satisface [aventura]))
-    (raval of Sitio_de_Interés (nombre "raval") (precio 23.8) (satisface [aventura]))
+    (reina_sofia of Hotel (nombre "Hotel Reina Sofia") (precio 200) (esta-en [barcelona]))
+    (macba of Sitio_de_Interés (nombre "MACBA") (precio 50) (satisface [religion] [aventura]) (esta-en [barcelona]))
+    (sagrada_familia of Sitio_de_Interés (nombre "Sagrada Familia") (precio 100) (satisface [religion]) (esta-en [barcelona]))
+    (barceloneta of Sitio_de_Interés (nombre "barceloneta") (precio 0) (satisface [aventura]) (esta-en [barcelona]))
+    (raval of Sitio_de_Interés (nombre "raval") (precio 23.8) (satisface [aventura]) (esta-en [barcelona]))
 )
 
 ; Exportació del MAIN
-(defmodule MAIN (export ?ALL)
- (focus Preguntes)
- (focus Seleccio)
-)
+(defmodule MAIN (export ?ALL))
 
 ; Definició de TEMPLATES que poguem necessitar
 (deftemplate client 
@@ -157,37 +160,38 @@
     (multislot interesos)
 )
 
-(deftemplate viatge
-    (slot preu-total)
-    (slot duracio)
-    (multislot ciutats)
-    (multislot allotjaments)
-    (multislot dies-ciutats)
-    (multislot llocs-interes)
-    (multislot transports)
-)
-
 ; Definició de MISSATGES entre classes
 
 ; Definició de FUNCIONS
 
 (deffunction fer-pregunta (?p)
-   (printout t ?p)
+   (printout t ?p crlf)
    (bind ?r (read))
    (if (lexemep ?r) 
        then (bind ?r (lowcase ?r)))
-   ?r)
+   ?r
+)
 
-   (deffunction pregunta-si-o-no (?p)
-   (bind ?r (fer-pregunta ?p))
-   (if (or (eq ?r yes) (eq ?r si))
-       then TRUE 
-       else FALSE))
+(deffunction pregunta-si-o-no (?p)
+    (bind ?r (fer-pregunta ?p))
+    (if (or (eq ?r yes) (eq ?r si))
+        then TRUE 
+        else FALSE)
+)
+
+(deffunction pregunta-llista (?pregunta)
+    (format t "¿%s?" ?pregunta)
+    (bind ?resposta (readline))
+    (bind ?resposta (lowcase ?resposta))
+    (bind ?res (explode$ ?resposta))
+    ?res
+)
+
 
 ; Definició de REGLES
 
 ; Mòdul de PREGUNTES
-(defmodule Preguntes (import ?ALL) (export ?ALL)
+;(defmodule Preguntes (import ?ALL) (export ?ALL)
 
 (defrule inici
     (declare (salience 10))
@@ -237,6 +241,25 @@
    (assert (dies usuari)) 
 )
 
+(defrule determina-interesos-client ""
+    (iniciat ?)
+    (dies ?)
+    (dies-per-ciutat ?)
+    (not (interesos ?))
+    ?c <- (client)
+    =>
+    (bind ?interesos (find-all-instances ((?i Interés)) TRUE))
+    (printout t ?interesos  crlf)
+    (bind ?r (pregunta-llista "Quins son els teus interessos? (d'entre la llista anterior)"))
+    (bind ?l (create$))
+    (loop-for-count (?i 1 (length$ ?r)) do
+        (bind ?aux (nth$ ?i ?r))
+        (if (member$ ?aux ?interesos) then (bind ?l (insert$ ?l 1 ?aux)))
+    )
+    (modify ?c (interesos ?l))
+    (assert (interesos usuari))
+)
+
 (defrule determina-dies-per-ciutat-client ""
    (iniciat ?)
    (not (dies-per-ciutat ?))
@@ -257,48 +280,111 @@
     (modify ?c (num-ciutats (/ ?de ?dpc)))
     (assert (num-ciutats usuari))
 )
-)
+;)
    
 ; Mòdul de SELECCIÓ
-(defmodule Seleccio (import ?ALL) (export ?ALL)
+;(defmodule Seleccio (import ?ALL) (export ?ALL)
 
 (deftemplate dades
-    slot preu-actual
-    slot dies-actuals
-    slot num-ciutats-actual
-    multislot llocs-compatibles
+    (multislot llocs-compatibles)
+    (multislot ciutats-compatibles)
+    (multislot qualitat-ciutats)
+    (multislot allotjaments-compatibles)
+    (multislot transports-compatibles)
 )
 
-(defrule inicialitza-viatge ""
-    (not (viatge-inicialitzat ?))
-    ?c <- (client (duracio-esperada ?de))
+(deffunction troba_index (?elem ?list)
+    (bind ?i 1)
+    (while (and (neq (nth$ ?i ?list) ?elem) (<= ?i (length$ ?list))) do 
+        (bind ?i (+ ?i 1))
+    )
+    (if (<= ?i (length$ ?list)) 
+        then ?i 
+        else -1
+    )
+)
+
+(defrule inicialitza-dades ""
+    (interesos ?)
+    (num-ciutats ?)
+    (not (inicialitza-dades ?))
     =>
-    (assert (viatge (duracio ?de)))
-    (assert (viatge-inicialitzat usuari))
-    (assert (dades))
+    (assert(dades (llocs-compatibles (create$)) (ciutats-compatibles (create$)) 
+                 (allotjaments-compatibles (create$)) (transports-compatibles (create$))
+                 (qualitat-ciutats (create$))))
+    (assert (inicialitza-dades usuari))
 )
 
 (defrule troba-llocs-compatibles ""
-    (viatge-inicialitzat ?)
-    ?ll <- (object (is-a Sitio_de_Interés) (satisface ?i))
     ?c <- (client (interesos $?li))
-    ?d <- (dades (llocs-compatibles $?ls)) 
+    ?d <- (dades)
+    (inicialitza-dades ?) 
+    (not (llocs-compatibles ?))
     =>
-    (if (member ?i ?li) then (insert$ ?ls ?i))
+    (bind ?llocs (find-all-instances ((?s Sitio_de_Interés)) TRUE))
+    (bind ?lista (create$))
+    (loop-for-count (?i 1 (length$ ?llocs)) do
+        (bind ?ll (nth$ ?i ?llocs))
+        (bind ?ins (send ?ll get-satisface))
+        (loop-for-count (?j 1 (length$ ?ins)) do
+            (bind ?in (nth$ ?j ?ins))
+            (if (member$ ?in ?li) then (bind ?lista (insert$ ?lista 1 ?ll)))
+        )
+    )
+    (modify ?d (llocs-compatibles ?lista))
+    (assert (llocs-compatibles usuari))
 )
 
 (defrule assigna-ciutats ""
     (llocs-compatibles ?)
-    (not (ciutats-assignades) ?)
-    ?c <- (object (is-a Ciudad))
-    ?d <- (dades (llocs-compatibles $?l))
+    (not (ciutats-assignades ?))
+    ?d <- (dades (llocs-compatibles $?ls))
     =>
-
+    (bind ?cs (create$))
+    (bind ?nums (create$))
+    (loop-for-count (?i 1 (length$ ?ls)) do
+        (bind ?l (nth$ ?i ?ls))
+        (bind ?c (send ?l get-esta-en))
+        (if (member$ ?c ?cs) then 
+            (bind ?n (troba_index ?c ?cs))
+            (bind ?nums (replace$ ?nums ?n ?n (+ (nth$ ?n ?nums) 1)))
+        else
+            (bind ?cs (insert$ ?cs 1 ?c))
+            (bind ?nums (insert$ ?nums 1 1))
+        )
+    )
+    (modify ?d (ciutats-compatibles ?cs) (qualitat-ciutats ?nums))
+    (assert (ciutats-assignades usuari))
 )
 
+(defrule assigna-allotjaments ""
+    (ciutats-assignades ?)
+    (not (allotjaments-assignats ?))
+    ?d <- (dades (ciutats-compatibles $?cs))
+    =>
+    (bind ?list (create$))
+    (loop-for-count (?i 1 (length$ ?cs)) do
+        (bind ?c (nth$ ?i ?cs))
+        (bind ?allotjs (find-all-instances ((?a Alojamiento)) (eq ?a:esta-en ?c)))
+        (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?allotjs))
+    )
+    (modify ?d (allotjaments-compatibles ?list))
+    (assert (allotjaments-assignats usuari))
 )
+
+;)
 
 ; Mòdul de CONSTRUCCIÓ
+
+(deftemplate viatge
+    (slot preu-total)
+    (slot duracio)
+    (multislot ciutats)
+    (multislot allotjaments)
+    (multislot dies-ciutats)
+    (multislot llocs-interes)
+    (multislot transports)
+)
 
 ; Mòdul d'IMPRESIÓ dels RESULTATS
 

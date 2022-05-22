@@ -11,9 +11,6 @@
     (role concrete)
     (pattern-match reactive)
     ;;; Expresa los días de duración.
-    (slot duración
-        (type INTEGER)
-        (create-accessor read-write))
     (slot nombre
         (type STRING)
         (create-accessor read-write))
@@ -76,24 +73,14 @@
         (create-accessor read-write))
 )
 
-(defclass Trayecto
+(defclass Medio_de_Transporte
     (is-a USER)
     (role concrete)
     (pattern-match reactive)
-    ;;; Expresa los días de duración.
-    (slot duración
-        (type INTEGER)
-        (create-accessor read-write))
-)
-
-(defclass Medio_de_Transporte
-    (is-a Trayecto)
-    (role concrete)
-    (pattern-match reactive)
-    (multislot destino
+    (slot destino
         (type INSTANCE)
         (create-accessor read-write))
-    (multislot origen
+    (slot origen
         (type INSTANCE)
         (create-accessor read-write))
     (slot precio
@@ -143,14 +130,17 @@
     (relax of Interés (nombre "relax"))
     (fiesta of Interés (nombre "fiesta"))
     (romántico of Interés (nombre "romántico"))
-    (barcelona of Ciudad (nombre "barcelona"))
+
+    (origen of Ciudad (nombre "Origen"))
+
+    (barcelona of Ciudad (nombre "Barcelona"))
     (reina_sofia of Hotel (nombre "Hotel Reina Sofia") (precio 200) (esta-en [barcelona]))
     (macba of Sitio_de_Interés (nombre "MACBA") (precio 50) (satisface [religion] [aventura]) (esta-en [barcelona]))
     (sagrada_familia of Sitio_de_Interés (nombre "Sagrada Familia") (precio 100) (satisface [religion]) (esta-en [barcelona]))
     (barceloneta of Sitio_de_Interés (nombre "barceloneta") (precio 0) (satisface [aventura]) (esta-en [barcelona]))
     (raval of Sitio_de_Interés (nombre "raval") (precio 23.8) (satisface [aventura]) (esta-en [barcelona]))
 
-    (amsterdam of Ciudad (nombre "amsterdam"))
+    (amsterdam of Ciudad (nombre "Amsterdam"))
     (the_bulldog_hotel of Hotel (nombre "The Bulldog Hotel") (precio 150) (esta-en [amsterdam]))
     (corendon_city_hotel of Hotel (nombre "Corendon City Hotel") (precio 86) (esta-en [amsterdam]))
     (hotel_notting_hill of Hotel (nombre "Hotel Notting Hill") (precio 131) (esta-en [amsterdam]))
@@ -159,37 +149,84 @@
     (rijksmuseum of Sitio_de_Interés (nombre "Rijksmuseum") (precio 20) (satisface [cultura]) (esta-en [amsterdam]))
     (vondelpark of Sitio_de_Interés (nombre "Vondelpark") (precio 0) (satisface [relax]) (esta-en [amsterdam]))
 
-    (paris of Ciudad (nombre "paris"))
+    (paris of Ciudad (nombre "Paris"))
     (hotel_minerve of Hotel (nombre "Hotel MINERVE") (precio 105) (esta-en [paris]))
     (hotel_le_walt of Hotel (nombre "Hotel Le Walt") (precio 307) (esta-en [paris]))
     (enjoy_hostel of Pensión (nombre "Enjoy Hostel") (precio 82) (esta-en [paris]))
     (torre_eiffel of Sitio_de_Interés (nombre "Torre Eiffel") (precio 40) (satisface [romántico]) (esta-en [paris]))
     (museo_louvre of Sitio_de_Interés (nombre "Museo Louvre") (precio 20) (satisface [cultura]) (esta-en [paris]))
-    (catedral_de_notredame of Sitio_de_Interés (nombre "Catedral de Notre-Dame") (precio 0) (satisface [religión]) (esta-en [paris]))
+    (catedral_de_notredame of Sitio_de_Interés (nombre "Catedral de Notre-Dame") (precio 0) (satisface [religion]) (esta-en [paris]))
 
-    (viena of Ciudad (nombre "viena"))
+    (viena of Ciudad (nombre "Viena"))
     (boutique_hotel of Hotel (nombre "Boutique Hotel") (precio 69) (esta-en [viena]))
     (aparthotel_adadgio of Hotel (nombre "Aparthotel Adagio") (precio 131) (esta-en [viena]))
     (camping_wien_west of Pensión (nombre "Camping Wien West") (precio 15) (esta-en [viena]))
     (schonbrunn_palace of Sitio_de_Interés (nombre "Schonbrunn Palace") (precio 20) (satisface [cultura]) (esta-en [viena]))
-    (st_stephen_cathedral of Sitio_de_Interés (nombre "St Stephen Cathedral") (precio 0) (satisface [religión]) (esta-en [viena]))
+    (st_stephen_cathedral of Sitio_de_Interés (nombre "St Stephen Cathedral") (precio 0) (satisface [religion]) (esta-en [viena]))
 
-    (roma of Ciudad (nombre "roma"))
+    (roma of Ciudad (nombre "Roma"))
     (napoleon_hotel of Hotel (nombre "Napoleon Hotel") (precio 186) (esta-en [roma]))
     (hotel_trevi of Hotel (nombre "Hotel Trevi") (precio 192) (esta-en [roma]))
     (rome_experience_hostel of Pensión (nombre "Rome Experience Hostel") (precio 52) (esta-en [roma]))
     (coliseo of Sitio_de_Interés (nombre "Coliseo") (precio 40) (satisface [cultura]) (esta-en [roma]))
-    (basílica_st_peter of Sitio_de_Interés (nombre "Basílica St Peter") (precio 10) (satisface [religión]) (esta-en [roma]))
+    (basílica_st_peter of Sitio_de_Interés (nombre "Basílica St Peter") (precio 10) (satisface [religion]) (esta-en [roma]))
     (bike_tour_orvieto of Sitio_de_Interés (nombre "Bike Tour Orvieto") (precio 400) (satisface [aventura]) (esta-en [roma]))
 
-    (praga of Ciudad (nombre "praga"))
+    (praga of Ciudad (nombre "Praga"))
     (grandium_hotel of Hotel (nombre "Grandium Hotel") (precio 96) (esta-en [praga]))
     (aria_hotel of Hotel (nombre "Aria Hotel") (precio 233) (esta-en [praga]))
     (prague_central_camp of Hotel (nombre "Prague Central Camp") (precio 18) (esta-en [praga]))
     (karlovy_lazne of Sitio_de_Interés (nombre "Karlovy Lazne") (precio 20) (satisface [fiesta]) (esta-en [praga]))
     (dancing_house of Sitio_de_Interés (nombre "Dancing House") (precio 0) (satisface [cultura]) (esta-en [praga]))
 
+    (bus1 of Bus (origen [barcelona]) (destino [praga]) (precio 20.0))
+    (bus2 of Bus (origen [praga]) (destino [barcelona]) (precio 20.0))
+    (bus3 of Bus (origen [barcelona]) (destino [roma]) (precio 12.0))
+    (bus4 of Bus (origen [roma]) (destino [barcelona]) (precio 12.0))
+    (bus5 of Bus (origen [praga]) (destino [roma]) (precio 8.0))
+    (bus6 of Bus (origen [roma]) (destino [praga]) (precio 8.0))
+    (bus7 of Bus (origen [barcelona]) (destino [paris]) (precio 10.0))
+    (bus8 of Bus (origen [paris]) (destino [barcelona]) (precio 10.0))
+    (bus9 of Bus (origen [barcelona]) (destino [origen]) (precio 15.0))
+    (bus10 of Bus (origen [origen]) (destino [barcelona]) (precio 15.0))
 
+
+    (tren1 of Tren (origen [origen]) (destino [praga]) (precio 20.0))
+    (tren2 of Tren (origen [praga]) (destino [origen]) (precio 20.0))
+    (tren3 of Tren (origen [amsterdam]) (destino [paris]) (precio 15.0))
+    (tren4 of Tren (origen [paris]) (destino [amsterdam]) (precio 15.0))
+    (tren5 of Tren (origen [roma]) (destino [paris]) (precio 25.0))
+    (tren6 of Tren (origen [paris]) (destino [roma]) (precio 25.0))
+    (tren7 of Tren (origen [roma]) (destino [amsterdam]) (precio 75.0))
+    (tren8 of Tren (origen [amsterdam]) (destino [roma]) (precio 75.0))
+    (tren9 of Tren (origen [viena]) (destino [amsterdam]) (precio 50.0))
+    (tren10 of Tren (origen [amsterdam]) (destino [viena]) (precio 50.0))
+    (tren11 of Tren (origen [paris]) (destino [viena]) (precio 20.0))
+    (tren12 of Tren (origen [viena]) (destino [paris]) (precio 20.0))
+    (tren13 of Tren (origen [origen]) (destino [viena]) (precio 30.0))
+    (tren14 of Tren (origen [viena]) (destino [origen]) (precio 30.0))
+
+    (avion1 of Avión (origen [origen]) (destino [roma]) (precio 80.0))
+    (avion2 of Avión (origen [roma]) (destino [origen]) (precio 80.0))
+    (avion3 of Avión (origen [barcelona]) (destino [viena]) (precio 120.0))
+    (avion4 of Avión (origen [viena]) (destino [barcelona]) (precio 120.0))
+    (avion5 of Avión (origen [praga]) (destino [viena]) (precio 40.0))
+    (avion6 of Avión (origen [viena]) (destino [praga]) (precio 40.0))
+    (avion7 of Avión (origen [paris]) (destino [praga]) (precio 70.0))
+    (avion8 of Avión (origen [praga]) (destino [paris]) (precio 70.0))
+    (avion9 of Avión (origen [amsterdam]) (destino [praga]) (precio 90.0))
+    (avion10 of Avión (origen [praga]) (destino [amsterdam]) (precio 90.0))
+    (avion11 of Avión (origen [roma]) (destino [viena]) (precio 60.0))
+    (avion12 of Avión (origen [viena]) (destino [roma]) (precio 60.0))
+    (avion13 of Avión (origen [paris]) (destino [origen]) (precio 70.0))
+    (avion14 of Avión (origen [origen]) (destino [paris]) (precio 70.0))
+
+    (barco1 of Barco (origen [origen]) (destino [amsterdam]) (precio 45.0))
+    (barco2 of Barco (origen [amsterdam]) (destino [origen]) (precio 45.0))
+    (barco3 of Barco (origen [barcelona]) (destino [amsterdam]) (precio 90.0))
+    (barco4 of Barco (origen [amsterdam]) (destino [barcelona]) (precio 90.0))
+    (barco5 of Barco (origen [origen]) (destino [amsterdam]) (precio 45.0))
+    (barco6 of Barco (origen [origen]) (destino [amsterdam]) (precio 45.0))
 
 )
 
@@ -200,9 +237,12 @@
 (deftemplate client 
     (slot tipus)
     (slot pressupost)
-    (slot duracio-esperada)
-    (slot dies-per-ciutat)
-    (slot num-ciutats)
+    (slot min-duracio)
+    (slot max-duracio)
+    (slot min-dies-per-ciutat)
+    (slot max-dies-per-ciutat)
+    (slot min-num-ciutats)
+    (slot max-num-ciutats)
     (multislot interesos)
 )
 
@@ -281,9 +321,11 @@
    (not (dies ?))
    ?c <- (client)
    =>
-   (bind ?r (fer-pregunta "Quants dies vols que duri el viatge? "))
-   (while (< ?r 0) do (bind ?r (fer-pregunta "Quants dies vols que duri el viatge? ")))
-   (modify ?c (duracio-esperada ?r))
+   (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? "))
+   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? ")))
+   (bind ?r2 (fer-pregunta "I com a màxim? "))
+   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
+   (modify ?c (min-duracio ?r1) (max-duracio ?r2))
    (assert (dies usuari)) 
 )
 
@@ -311,9 +353,11 @@
    (not (dies-per-ciutat ?))
    ?c <- (client)
    =>
-   (bind ?r (fer-pregunta "Quants dies vols estar a cada ciutat? "))
-   (while (< ?r 0) do (bind ?r (fer-pregunta "Quants dies vols estar a cada ciutat? ")))
-   (modify ?c (dies-per-ciutat ?r))
+   (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? "))
+   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? ")))
+   (bind ?r2 (fer-pregunta "I com a màxim? "))
+   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
+   (modify ?c (min-dies-per-ciutat ?r1) (max-dies-per-ciutat ?r2))
    (assert (dies-per-ciutat usuari)) 
 )
 
@@ -321,15 +365,15 @@
     (dies ?)
     (dies-per-ciutat ?)
     (not (num-ciutats ?))
-    ?c <- (client (duracio-esperada ?de) (dies-per-ciutat ?dpc))
+    ?c <- (client (min-duracio ?mind) (max-duracio ?maxd) (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
     =>
-    (modify ?c (num-ciutats (/ ?de ?dpc)))
+    (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?maxd ?mindpc)))
     (assert (num-ciutats usuari))
 )
-;)
+
    
 ; Mòdul de SELECCIÓ
-;(defmodule Seleccio (import ?ALL) (export ?ALL)
+;(defmodule Seleccio (import ?ALL) (export ?ALL))
 
 (deftemplate dades
     (multislot llocs-compatibles)
@@ -418,21 +462,269 @@
     (assert (allotjaments-assignats usuari))
 )
 
-;)
-
 ; Mòdul de CONSTRUCCIÓ
+;(defmodule Construccio (import ?ALL) (export ?ALL))
 
 (deftemplate viatge
     (slot preu-total)
     (slot duracio)
+    (slot num-ciutats)
     (multislot ciutats)
     (multislot allotjaments)
     (multislot dies-ciutats)
     (multislot llocs-interes)
-    (multislot transports)
+    (multislot transports)     
 )
 
+(deffunction troba_ciutat_max(?ciutats ?puntuacions)
+    (bind ?max 0)
+    (bind ?imax -1)
+    (loop-for-count (?i 1 (length$ ?puntuacions)) do
+        (bind ?c (nth$ ?i ?puntuacions))
+        (if (> ?c ?max) then 
+            (bind ?imax ?i)
+            (bind ?max ?c))
+    )
+    (bind ?res (nth$ ?imax ?ciutats))
+    ?res
+)
+
+(defrule selecciona-duracio ""
+    (declare (salience 10))
+    (allotjaments-assignats ?)
+    (not (duracio-seleccionada ?))
+    ?c <- (client (min-duracio ?mind) (max-duracio ?maxd))
+    =>
+    (loop-for-count (?i ?mind ?maxd) do 
+        (bind ?v (assert(viatge (duracio ?i))))
+        (assert (duracio-seleccionada ?v))
+    )
+)
+
+(defrule selecciona-num-ciutats ""
+    (declare(salience 5))
+    ?c <- (client (min-num-ciutats ?minn) (max-num-ciutats ?maxn))
+    ?v <- (viatge (duracio ?n))
+    (not (num-ciutats-seleccionat ?v))
+    (duracio-seleccionada ?v)
+    =>
+    (loop-for-count (?i (integer (+ ?minn 1)) (integer ?maxn)) do
+        (bind ?v2 (assert (viatge (duracio ?n) (num-ciutats ?i))))
+        (assert (num-ciutats-seleccionat ?v2))
+    )
+    (retract ?v)
+)
+
+(defrule selecciona-ciutats ""
+    ?d <- (dades (ciutats-compatibles $?cs) (qualitat-ciutats $?nums))
+    ?v <- (viatge (duracio ?n) (num-ciutats ?c))
+    (num-ciutats-seleccionat ?v)
+    (not (ciutats-seleccionades ?v))
+    =>
+    (bind ?n (random))
+    (bind ?list (create$))
+    (bind ?aux1 ?cs)
+    (bind ?aux2 ?nums)
+    (loop-for-count (?i 1 ?c) do
+        (bind ?cmax (troba_ciutat_max ?aux1 ?aux2))
+        (bind ?imax (troba_index ?cmax ?aux1))
+        (bind ?aux2 (replace$ ?aux2 ?imax ?imax 0))
+        (bind ?list (insert$ ?list 1 ?cmax))
+    )
+    (modify ?v (ciutats ?list))
+    (assert (ciutats-seleccionades ?v))
+)
+
+(defrule selecciona-dies-per-ciutat "" 
+    ?cl <- (client (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
+    ?v <- (viatge (duracio ?n) (num-ciutats ?c) (ciutats $?cs))
+    (ciutats-seleccionades ?v)
+    (not (dies-per-ciutat-seleccionats ?v))
+    =>
+    (bind ?dpc (integer (/ ?n ?c)))
+    (bind ?list (create$))
+    (loop-for-count (?i 1 ?c) do
+        (bind ?list (insert$ ?list 1 ?dpc))
+    )
+    (bind ?rest (- ?n (* ?dpc ?c)))
+    (loop-for-count (?i 1 ?rest) do 
+        (bind ?list (replace$ ?list ?i ?i (+ (nth$ ?i ?list) 1)))
+    )
+    (modify ?v (dies-ciutats ?list))
+    (assert (dies-per-ciutat-seleccionats ?v))
+)
+
+(defrule selecciona-llocs-interes ""
+    ?v <- (viatge (ciutats $?cs) (dies-ciutats $?dies))
+    ?d <- (dades (llocs-compatibles $?lls))
+    (dies-per-ciutat-seleccionats ?v)
+    (not (llocs-interes-seleccionats ?v))
+    =>
+    (bind ?list (create$))
+    (bind ?aux  (create$))
+    (loop-for-count (?i 1 (length$ ?lls)) do 
+        (bind ?ll (nth$ ?i ?lls))
+        (if (member$ (send ?ll get-esta-en) ?cs) then (bind ?aux (insert$ ?aux (+ (length$ ?aux) 1) ?ll)))
+    )
+    (loop-for-count (?j 1 (length$ ?cs)) do 
+        (bind ?n (nth$ ?j ?dies))
+        (bind ?c (nth$ ?j ?cs))
+        (loop-for-count (?k 1 ?n) do
+            (bind ?index 1)
+            (bind ?found 0) 
+            (while (eq ?found 0) do
+                (bind ?ll (nth$ ?index ?aux))
+                (if (and (eq (send ?ll get-esta-en) ?c) (not (member$ ?ll ?list))) then 
+                    (bind ?found 1)
+                    (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?ll))
+                )
+                (bind ?index (+ ?index 1))
+                (if (> ?index (length$ ?aux)) then (bind ?found 1))
+            )
+        )
+    )
+    (modify ?v (llocs-interes ?list))
+    (assert (llocs-interes-seleccionats ?v))
+)
+
+(defrule selecciona-allotjaments ""
+    ?v <- (viatge (ciutats $?cs))
+    ?d <- (dades (allotjaments-compatibles $?as))
+    (llocs-interes-seleccionats ?v)
+    (not (allotjaments-seleccionats ?v))
+    =>
+    (bind ?list (create$))
+    (loop-for-count (?i 1 (length$ ?cs)) do 
+        (bind ?c (nth$ ?i ?cs))
+        (bind ?found 0)
+        (bind ?j 1)
+        (while (eq ?found 0) do
+            (bind ?a (nth$ ?j ?as))
+            (if (eq (send ?a get-esta-en) ?c) then 
+                (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?a))
+                (bind ?found 1)
+            )
+            (bind ?j (+ ?j 1))
+        )
+    )
+    (modify ?v (allotjaments ?list))
+    (assert (allotjaments-seleccionats ?v))
+)
+
+(defrule selecciona-transports ""
+    ?v <- (viatge (ciutats $?cs))
+    ?d <- (dades)
+    ?t1 <- (object (is-a Medio_de_Transporte) (origen ?o1) (destino ?d1))
+    ?t2 <- (object (is-a Medio_de_Transporte) (origen ?o2) (destino ?d2))
+    (allotjaments-seleccionats ?v)
+    (not (transports-seleccionats ?v))
+    (test (and (eq ?o1 [origen]) (eq ?d1 (nth$ 1 ?cs)) (eq ?o2 (nth$ (length$ ?cs) ?cs)) (eq ?d2 [origen])))
+    =>
+    (bind ?transports_entre (find-all-instances ((?mt Medio_de_Transporte)) (and (member$ ?mt:origen ?cs) (member$ ?mt:destino ?cs))))
+    (bind ?list (create$ ?t1 ?t2))
+    (loop-for-count (?i 1 (- (length$ ?cs) 1)) do
+        (bind ?o (nth$ ?i ?cs))
+        (bind ?d (nth$ (+ ?i 1) ?cs))
+        (bind ?found 0)
+        (bind ?j 1)
+        (while (eq ?found 0) do
+            (bind ?t (nth$ ?j ?transports_entre))
+            (if (and (eq (send ?t get-origen) ?o) (eq (send ?t get-destino) ?d)) then 
+                (bind ?list (insert$ ?list (length$ ?list) ?t))
+                (bind ?found 1)
+            )
+            (bind ?j (+ ?j 1))
+            (if (> ?j (length$ ?transports_entre)) then (bind ?found 1))
+        )
+    )
+    (modify ?v (transports ?list))
+    (assert(transports-seleccionats ?v))
+)
+
+(defrule calcula-preu-total ""
+    ?v <- (viatge (allotjaments $?as) (llocs-interes $?lls) (transports $?ts) (dies-ciutats $?ns))
+    (not (preu-total-calculat ?v))
+    (transports-seleccionats ?v)
+    =>
+    (bind ?pt 0)
+    (loop-for-count (?i 1 (length$ ?as)) do
+        (bind ?a (nth$ ?i ?as))
+        (bind ?n (nth$ ?i ?ns))
+        (bind ?pt (+ ?pt (* ?n (send ?a get-precio))))
+    )
+    (loop-for-count (?j 1 (length$ ?lls)) do
+        (bind ?ll (nth$ ?j ?lls))
+        (bind ?pt (+ ?pt (send ?ll get-precio)))
+    )
+    (loop-for-count (?k 1 (length$ ?ts)) do
+        (bind ?t (nth$ ?k ?ts))
+        (bind ?pt (+ ?pt (send ?t get-precio)))
+    )
+    (modify ?v (preu-total ?pt))
+    (assert (preu-total-calculat ?v))
+    (assert (impresos 0))
+)
+
+; multislots de 1 en 1 en la part esquerra de la regla (maybe?)
+
 ; Mòdul d'IMPRESIÓ dels RESULTATS
+
+(defrule impresio-resultats ""
+    ?cl <- (client (pressupost ?pr))
+    ?v <- (viatge (preu-total ?pt) (duracio ?d) (num-ciutats ?n) (ciutats $?cs) (allotjaments $?as)
+            (dies-ciutats $?dpcs) (llocs-interes $?lls) (transports $?ts))
+    (preu-total-calculat ?v)
+    (not (impresos 2))
+    (not (impres ?v))
+    (impresos ?imp)
+    (test (<= ?pt ?pr))
+    =>
+    (printout t "VIAJE RECOMENDADO " (+ ?imp 1)  ":" crlf)
+    (printout t "Precio total (persona): " ?pt " euros" crlf)
+    (printout t "Duración del viaje: " ?d " dias" crlf)
+    (printout t "Ciudades: ")
+    (loop-for-count (?i 1 (length$ ?cs)) do 
+        (printout t (send (nth$ ?i ?cs) get-nombre) " (" (nth$ ?i ?dpcs) " dias)")
+        (if (neq ?i (length$ ?cs)) then 
+            (printout t ", ")
+        )
+    )
+    (printout t crlf)
+    (printout t "Visitas: ")
+    (loop-for-count (?i 1 (length$ ?cs)) do
+        (bind ?c (nth$ ?i ?cs))
+        (printout t (send ?c get-nombre) ": ")
+        (loop-for-count (?j 1 (length$ ?lls)) do
+            (bind ?ll (nth$ ?j ?lls))
+            (if (eq ?c (send ?ll get-esta-en)) then (printout t (send ?ll get-nombre) ", "))
+        )
+    )
+    (printout t crlf)
+    (printout t "Alojamiento: ")
+    (loop-for-count (?i 1 (length$ ?cs)) do
+        (bind ?c (nth$ ?i ?cs))
+        (printout t (send ?c get-nombre) ": ")
+        (bind ?a (nth$ ?i ?as))
+        (printout t (send ?a get-nombre))
+        (if (neq ?i (length$ ?cs)) then (printout t ", "))
+    )
+    (printout t crlf)
+    (printout t "Viajes: ")
+    (loop-for-count (?i 1 (length$ ?ts)) do
+        (bind ?t (nth$ ?i ?ts))
+        (bind ?o (send ?t get-origen))
+        (bind ?d (send ?t get-destino))
+        (printout t (send ?o get-nombre) "-" (send ?d get-nombre) ": ")
+        (if (eq (class ?t) Bus) then (printout t "Bus"))
+        (if (eq (class ?t) Avion) then (printout t "Avion"))
+        (if (eq (class ?t) Tren) then (printout t "Tren"))
+        (if (eq (class ?t) Barco) then (printout t "Barco"))
+        (if (neq ?i (length$ ?ts)) then (printout t ", "))
+    )
+    (printout t crlf)
+    (assert (impresos (+ ?imp 1)))
+    (assert (impres ?v))
+)
 
 ;(defrule cliente-e-interes
 ;    ?p1 <- (object (is-a Cliente))

@@ -129,7 +129,9 @@
     (cultura of Interés (nombre "cultura"))
     (relax of Interés (nombre "relax"))
     (fiesta of Interés (nombre "fiesta"))
-    (romántico of Interés (nombre "romántico"))
+    (romantico of Interés (nombre "romántico"))
+    (nens of Interés (nombre "nens"))
+    (amics of Interés (nombre "amics"))
 
     (origen of Ciudad (nombre "Origen"))
 
@@ -252,6 +254,7 @@
     (slot min-num-ciutats)
     (slot max-num-ciutats)
     (multislot interesos)
+    (multislot valora)
 )
 
 ; Definició de FUNCIONS
@@ -312,11 +315,16 @@
        then (assert (client (tipus individual)))
        else 
        (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no) ")
-           then (assert (client (tipus parella)))
+           then (assert (client (tipus parella) (valora (create$ [romàntic]))))
            else 
            (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no) ")
-                 then (assert (client (tipus familia)))
-                 else (assert (client (tipus grup)))
+                 then (if (pregunta-si-o-no "Tens nens petits? (si/no)") 
+                        then (assert (client (tipus familia) (valora (create$ [nens]))))
+                        else (assert (client (tipus familia))))
+                 else (if (pregunta-si-o-no "Viatges amb un grup d'amics? (si/no)")
+                        then  (assert (client (tipus grup) (valora (create$ [amics]))))
+                        else  (assert (client (tipus otros)))
+                 )
             )
         )
     )
@@ -349,7 +357,7 @@
     (dies)
     (dies-per-ciutat)
     (not (interesos))
-    ?c <- (client)
+    ?c <- (client (valora $?v))
     =>
     (bind ?interesos (find-all-instances ((?i Interés)) TRUE))
     (printout t "Llista d'Interesos: " crlf)
@@ -357,7 +365,7 @@
     (loop-for-count (?i 1 (length$ ?interesos)) do 
         (bind ?inte (nth$ ?i ?interesos))
         (bind ?nom (send ?inte get-nombre))
-        (bind ?nombres (insert$ ?nombres (+ (length$ ?nombres) 1) ?nom))
+        (if (not (member$ ?inte ?v)) then (bind ?nombres (insert$ ?nombres (+ (length$ ?nombres) 1) ?nom)))
     )
     (printout t ?nombres crlf)
     (bind ?r (pregunta-llista "Quins son els teus interessos? (d'entre la llista anterior)"))
@@ -392,7 +400,13 @@
     (not (num-ciutats))
     ?c <- (client (min-duracio ?mind) (max-duracio ?maxd) (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
     =>
-    (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?maxd ?mindpc)))
+    (bind ?ciutats (find-all-instances ((?ciu Ciudad)) TRUE))
+    (bind ?num_ciutats (length$ ?ciutats))
+    (if (> (/ ?maxd ?mindpc) (/ ?num_ciutats 2)) then 
+        (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?num_ciutats 2)))
+        else
+        (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?maxd ?mindpc)))
+        )
     (assert (num-ciutats))
 )
 
@@ -447,6 +461,7 @@
     (llocs-compatibles)
     (not (ciutats-assignades))
     ?d <- (dades (llocs-compatibles $?ls))
+    ?cl <- (client (min-duracio ?mind) (max-duracio ?maxd) (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
     =>
     (bind ?cs (create$))
     (bind ?nums (create$))
@@ -463,6 +478,10 @@
     )
     (modify ?d (ciutats-compatibles ?cs) (qualitat-ciutats ?nums))
     (assert (ciutats-assignades))
+    (bind ?num_ciutats (length$ ?cs))
+    (if (> (/ ?maxd ?mindpc) (/ ?num_ciutats 2)) then 
+        (modify ?cl (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?num_ciutats 2)))
+    )
 )
 
 (defrule Seleccio::assigna-allotjaments ""
@@ -610,19 +629,23 @@
 )
 
 (defrule Construccio::selecciona-allotjaments ""
-    ?v <- (viatge (ciutats $?cs))
+    ?v <- (viatge (ciutats $?cs) (dies-ciutats $?dpcs) (num-ciutats ?n))
     ?d <- (dades (allotjaments-compatibles $?as))
+    ?cl <- (client (pressupost ?ps))
     (llocs-interes-seleccionats ?v)
     (not (allotjaments-seleccionats ?v))
     =>
+    (bind ?presperciu (/ ?ps ?n))
     (bind ?list (create$))
     (loop-for-count (?i 1 (length$ ?cs)) do 
         (bind ?c (nth$ ?i ?cs))
+        (bind ?dies (nth$ ?i ?dpcs))
+        (bind ?prespernit (/ ?presperciu ?dies))
         (bind ?found 0)
         (bind ?j 1)
         (while (eq ?found 0) do
             (bind ?a (nth$ ?j ?as))
-            (if (eq (send ?a get-esta-en) ?c) then 
+            (if (and (eq (send ?a get-esta-en) ?c) (< (send ?a get-precio) ?prespernit)) then 
                 (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?a))
                 (bind ?found 1)
             )
@@ -784,6 +807,5 @@
         (printout t "Ho sentim, no hi ha viatges que s'ajustin a les teves restriccions." crlf)
 )
 
-; Dividir pressupost entre num_ciutats i agafar hotels amb preus mes baixos a allo.
 ; Potser és més important escollir transport abans que allotjament.
 ; multislots de 1 en 1 en la part esquerra de la regla (maybe?)

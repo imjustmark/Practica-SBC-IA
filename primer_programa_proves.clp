@@ -230,11 +230,19 @@
 
 )
 
-; Exportació del MAIN
+; Definició de MÒDULS
 (defmodule MAIN (export ?ALL))
 
+(defmodule Preguntes (import MAIN ?ALL) (export ?ALL))
+
+(defmodule Seleccio (import MAIN ?ALL) (import Preguntes ?ALL) (export ?ALL))
+
+(defmodule Construccio (import MAIN ?ALL) (import Preguntes ?ALL) (import Seleccio ?ALL) (export ?ALL))
+
+(defmodule Escriptura (import MAIN ?ALL) (import Preguntes ?ALL) (import Seleccio ?ALL) (import Construccio ?ALL) (export ?ALL))
+
 ; Definició de TEMPLATES que poguem necessitar
-(deftemplate client 
+(deftemplate MAIN::client 
     (slot tipus)
     (slot pressupost)
     (slot min-duracio)
@@ -245,8 +253,6 @@
     (slot max-num-ciutats)
     (multislot interesos)
 )
-
-; Definició de MISSATGES entre classes
 
 ; Definició de FUNCIONS
 
@@ -267,120 +273,11 @@
 
 (deffunction pregunta-llista (?pregunta)
     (format t "¿%s?" ?pregunta)
+    (printout t crlf)
     (bind ?resposta (readline))
     (bind ?resposta (lowcase ?resposta))
     (bind ?res (explode$ ?resposta))
     ?res
-)
-
-
-; Definició de REGLES
-
-; Mòdul de PREGUNTES
-;(defmodule Preguntes (import ?ALL) (export ?ALL)
-
-(defrule inici
-    (declare (salience 10))
-    (not (iniciat ?))
-    =>
-    (printout t "Benvingut!" crlf)
-    (assert(iniciat usuari))
-)
-
-(defrule determina-tipus-client ""
-   (iniciat ?)
-   =>
-   (if (pregunta-si-o-no "Viatges sol? (si/no) ") 
-       then (assert (client (tipus individual)))
-       else 
-       (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no) ")
-           then (assert (client (tipus parella)))
-           else 
-           (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no) ")
-                 then (assert (client (tipus familia)))
-                 else (assert (client (tipus grup)))
-            )
-        )
-    )
-    (assert (tipus usuari))
-)
-
-(defrule determina-pressupost-client ""
-   (iniciat ?)
-   (not (pressupost ?))
-   ?c <- (client)
-   =>
-   (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? "))
-   (while (< ?r 0) do (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? ")))
-   (modify ?c (pressupost ?r))
-   (assert (pressupost usuari)) 
-)
-
-(defrule determina-dies-client ""
-   (iniciat ?)
-   (not (dies ?))
-   ?c <- (client)
-   =>
-   (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? "))
-   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? ")))
-   (bind ?r2 (fer-pregunta "I com a màxim? "))
-   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
-   (modify ?c (min-duracio ?r1) (max-duracio ?r2))
-   (assert (dies usuari)) 
-)
-
-(defrule determina-interesos-client ""
-    (iniciat ?)
-    (dies ?)
-    (dies-per-ciutat ?)
-    (not (interesos ?))
-    ?c <- (client)
-    =>
-    (bind ?interesos (find-all-instances ((?i Interés)) TRUE))
-    (printout t ?interesos  crlf)
-    (bind ?r (pregunta-llista "Quins son els teus interessos? (d'entre la llista anterior)"))
-    (bind ?l (create$))
-    (loop-for-count (?i 1 (length$ ?r)) do
-        (bind ?aux (nth$ ?i ?r))
-        (if (member$ ?aux ?interesos) then (bind ?l (insert$ ?l 1 ?aux)))
-    )
-    (modify ?c (interesos ?l))
-    (assert (interesos usuari))
-)
-
-(defrule determina-dies-per-ciutat-client ""
-   (iniciat ?)
-   (not (dies-per-ciutat ?))
-   ?c <- (client)
-   =>
-   (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? "))
-   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? ")))
-   (bind ?r2 (fer-pregunta "I com a màxim? "))
-   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
-   (modify ?c (min-dies-per-ciutat ?r1) (max-dies-per-ciutat ?r2))
-   (assert (dies-per-ciutat usuari)) 
-)
-
-(defrule determina-num-ciutats-client ""
-    (dies ?)
-    (dies-per-ciutat ?)
-    (not (num-ciutats ?))
-    ?c <- (client (min-duracio ?mind) (max-duracio ?maxd) (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
-    =>
-    (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?maxd ?mindpc)))
-    (assert (num-ciutats usuari))
-)
-
-   
-; Mòdul de SELECCIÓ
-;(defmodule Seleccio (import ?ALL) (export ?ALL))
-
-(deftemplate dades
-    (multislot llocs-compatibles)
-    (multislot ciutats-compatibles)
-    (multislot qualitat-ciutats)
-    (multislot allotjaments-compatibles)
-    (multislot transports-compatibles)
 )
 
 (deffunction troba_index (?elem ?list)
@@ -394,22 +291,143 @@
     )
 )
 
-(defrule inicialitza-dades ""
-    (interesos ?)
-    (num-ciutats ?)
-    (not (inicialitza-dades ?))
+
+; Definició de REGLES
+
+; Mòdul de PREGUNTES
+
+(defrule MAIN::inici
+    (declare (salience 10))
+    =>
+    (printout t "----------------------------------------" crlf)
+    (printout t "    Agència de Viatges IA-Paradisus" crlf)
+    (printout t "----------------------------------------" crlf)
+    (focus Preguntes)
+)
+
+(defrule Preguntes::determina-tipus-client ""
+   (not (tipus))
+   =>
+   (if (pregunta-si-o-no "Viatges sol? (si/no) ") 
+       then (assert (client (tipus individual)))
+       else 
+       (if (pregunta-si-o-no "Viatges amb la teva parella? (si/no) ")
+           then (assert (client (tipus parella)))
+           else 
+           (if (pregunta-si-o-no "Viatges amb la teva familia? (si/no) ")
+                 then (assert (client (tipus familia)))
+                 else (assert (client (tipus grup)))
+            )
+        )
+    )
+    (assert (tipus))
+)
+
+(defrule Preguntes::determina-pressupost-client ""
+   (not (pressupost))
+   ?c <- (client)
+   =>
+   (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? "))
+   (while (< ?r 0) do (bind ?r (fer-pregunta "Quin es el teu pressupost maxim? ")))
+   (modify ?c (pressupost ?r))
+   (assert (pressupost)) 
+)
+
+(defrule Preguntes::determina-dies-client ""
+   (not (dies))
+   ?c <- (client)
+   =>
+   (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? "))
+   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols que duri el viatge com a mínim? ")))
+   (bind ?r2 (fer-pregunta "I com a màxim? "))
+   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
+   (modify ?c (min-duracio ?r1) (max-duracio ?r2))
+   (assert (dies)) 
+)
+
+(defrule Preguntes::determina-interesos-client ""
+    (dies)
+    (dies-per-ciutat)
+    (not (interesos))
+    ?c <- (client)
+    =>
+    (bind ?interesos (find-all-instances ((?i Interés)) TRUE))
+    (printout t "Llista d'Interesos: " crlf)
+    (bind ?nombres (create$))
+    (loop-for-count (?i 1 (length$ ?interesos)) do 
+        (bind ?inte (nth$ ?i ?interesos))
+        (bind ?nom (send ?inte get-nombre))
+        (bind ?nombres (insert$ ?nombres (+ (length$ ?nombres) 1) ?nom))
+    )
+    (printout t ?nombres crlf)
+    (bind ?r (pregunta-llista "Quins son els teus interessos? (d'entre la llista anterior)"))
+    (bind ?l (create$))
+    (loop-for-count (?i 1 (length$ ?r)) do
+        (bind ?aux (nth$ ?i ?r))
+        (if (member$ ?aux ?nombres) then 
+            (bind ?j (troba_index ?aux ?nombres))
+            (bind ?inst (nth$ ?j ?interesos))
+            (bind ?l (insert$ ?l (+ (length$ ?l) 1) ?inst))
+        )
+    )
+    (modify ?c (interesos ?l))
+    (assert (interesos))
+)
+
+(defrule Preguntes::determina-dies-per-ciutat-client ""
+   (not (dies-per-ciutat))
+   ?c <- (client)
+   =>
+   (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? "))
+   (while (< ?r1 0) do (bind ?r1 (fer-pregunta "Quants dies vols estar a cada ciutat com a mínim? ")))
+   (bind ?r2 (fer-pregunta "I com a màxim? "))
+   (while (< ?r2 ?r1) do (bind ?r2 (fer-pregunta "I com a màxim? ")))
+   (modify ?c (min-dies-per-ciutat ?r1) (max-dies-per-ciutat ?r2))
+   (assert (dies-per-ciutat)) 
+)
+
+(defrule Preguntes::determina-num-ciutats-client ""
+    (dies)
+    (dies-per-ciutat)
+    (not (num-ciutats))
+    ?c <- (client (min-duracio ?mind) (max-duracio ?maxd) (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
+    =>
+    (modify ?c (min-num-ciutats (/ ?mind ?maxdpc)) (max-num-ciutats (/ ?maxd ?mindpc)))
+    (assert (num-ciutats))
+)
+
+(defrule Preguntes::fi-de-modul ""
+    (declare (salience -10))
+    (num-ciutats)
+    =>
+    (focus Seleccio)
+)
+
+   
+; Mòdul de SELECCIÓ
+
+(deftemplate MAIN::dades
+    (multislot llocs-compatibles)
+    (multislot ciutats-compatibles)
+    (multislot qualitat-ciutats)
+    (multislot allotjaments-compatibles)
+    (multislot transports-compatibles)
+)
+
+(defrule Seleccio::inicialitza-dades ""
+    (not (inicialitza-dades))
     =>
     (assert(dades (llocs-compatibles (create$)) (ciutats-compatibles (create$)) 
                  (allotjaments-compatibles (create$)) (transports-compatibles (create$))
                  (qualitat-ciutats (create$))))
-    (assert (inicialitza-dades usuari))
+    (assert (inicialitza-dades))
 )
 
-(defrule troba-llocs-compatibles ""
+(defrule Seleccio::troba-llocs-compatibles ""
     ?c <- (client (interesos $?li))
     ?d <- (dades)
-    (inicialitza-dades ?) 
-    (not (llocs-compatibles ?))
+    (inicialitza-dades) 
+    (not (llocs-compatibles))
     =>
     (bind ?llocs (find-all-instances ((?s Sitio_de_Interés)) TRUE))
     (bind ?lista (create$))
@@ -422,12 +440,12 @@
         )
     )
     (modify ?d (llocs-compatibles ?lista))
-    (assert (llocs-compatibles usuari))
+    (assert (llocs-compatibles))
 )
 
-(defrule assigna-ciutats ""
-    (llocs-compatibles ?)
-    (not (ciutats-assignades ?))
+(defrule Seleccio::assigna-ciutats ""
+    (llocs-compatibles)
+    (not (ciutats-assignades))
     ?d <- (dades (llocs-compatibles $?ls))
     =>
     (bind ?cs (create$))
@@ -444,12 +462,12 @@
         )
     )
     (modify ?d (ciutats-compatibles ?cs) (qualitat-ciutats ?nums))
-    (assert (ciutats-assignades usuari))
+    (assert (ciutats-assignades))
 )
 
-(defrule assigna-allotjaments ""
-    (ciutats-assignades ?)
-    (not (allotjaments-assignats ?))
+(defrule Seleccio::assigna-allotjaments ""
+    (ciutats-assignades)
+    (not (allotjaments-assignats))
     ?d <- (dades (ciutats-compatibles $?cs))
     =>
     (bind ?list (create$))
@@ -459,11 +477,17 @@
         (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?allotjs))
     )
     (modify ?d (allotjaments-compatibles ?list))
-    (assert (allotjaments-assignats usuari))
+    (assert (allotjaments-assignats))
+)
+
+(defrule Seleccio::fi-de-modul ""
+    (declare (salience -10))
+    (allotjaments-assignats)
+    =>
+    (focus Construccio)
 )
 
 ; Mòdul de CONSTRUCCIÓ
-;(defmodule Construccio (import ?ALL) (export ?ALL))
 
 (deftemplate viatge
     (slot preu-total)
@@ -486,12 +510,11 @@
             (bind ?max ?c))
     )
     (bind ?res (nth$ ?imax ?ciutats))
-    ?res
+    ?imax
 )
 
-(defrule selecciona-duracio ""
+(defrule Construccio::selecciona-duracio ""
     (declare (salience 10))
-    (allotjaments-assignats ?)
     (not (duracio-seleccionada ?))
     ?c <- (client (min-duracio ?mind) (max-duracio ?maxd))
     =>
@@ -501,8 +524,8 @@
     )
 )
 
-(defrule selecciona-num-ciutats ""
-    (declare(salience 5))
+(defrule Construccio::selecciona-num-ciutats ""
+    (declare (salience 5))
     ?c <- (client (min-num-ciutats ?minn) (max-num-ciutats ?maxn))
     ?v <- (viatge (duracio ?n))
     (not (num-ciutats-seleccionat ?v))
@@ -515,19 +538,18 @@
     (retract ?v)
 )
 
-(defrule selecciona-ciutats ""
+(defrule Construccio::selecciona-ciutats ""
     ?d <- (dades (ciutats-compatibles $?cs) (qualitat-ciutats $?nums))
-    ?v <- (viatge (duracio ?n) (num-ciutats ?c))
+    ?v <- (viatge (num-ciutats ?c))
     (num-ciutats-seleccionat ?v)
     (not (ciutats-seleccionades ?v))
     =>
-    (bind ?n (random))
     (bind ?list (create$))
     (bind ?aux1 ?cs)
     (bind ?aux2 ?nums)
     (loop-for-count (?i 1 ?c) do
-        (bind ?cmax (troba_ciutat_max ?aux1 ?aux2))
-        (bind ?imax (troba_index ?cmax ?aux1))
+        (bind ?imax (troba_ciutat_max ?aux1 ?aux2))
+        (bind ?cmax (nth$ ?imax ?aux1))
         (bind ?aux2 (replace$ ?aux2 ?imax ?imax 0))
         (bind ?list (insert$ ?list 1 ?cmax))
     )
@@ -535,7 +557,7 @@
     (assert (ciutats-seleccionades ?v))
 )
 
-(defrule selecciona-dies-per-ciutat "" 
+(defrule Construccio::selecciona-dies-per-ciutat "" 
     ?cl <- (client (min-dies-per-ciutat ?mindpc) (max-dies-per-ciutat ?maxdpc))
     ?v <- (viatge (duracio ?n) (num-ciutats ?c) (ciutats $?cs))
     (ciutats-seleccionades ?v)
@@ -554,7 +576,7 @@
     (assert (dies-per-ciutat-seleccionats ?v))
 )
 
-(defrule selecciona-llocs-interes ""
+(defrule Construccio::selecciona-llocs-interes ""
     ?v <- (viatge (ciutats $?cs) (dies-ciutats $?dies))
     ?d <- (dades (llocs-compatibles $?lls))
     (dies-per-ciutat-seleccionats ?v)
@@ -587,7 +609,7 @@
     (assert (llocs-interes-seleccionats ?v))
 )
 
-(defrule selecciona-allotjaments ""
+(defrule Construccio::selecciona-allotjaments ""
     ?v <- (viatge (ciutats $?cs))
     ?d <- (dades (allotjaments-compatibles $?as))
     (llocs-interes-seleccionats ?v)
@@ -611,7 +633,7 @@
     (assert (allotjaments-seleccionats ?v))
 )
 
-(defrule selecciona-transports ""
+(defrule Construccio::selecciona-transports ""
     ?v <- (viatge (ciutats $?cs))
     ?d <- (dades)
     ?t1 <- (object (is-a Medio_de_Transporte) (origen ?o1) (destino ?d1))
@@ -641,7 +663,7 @@
     (assert(transports-seleccionats ?v))
 )
 
-(defrule calcula-preu-total ""
+(defrule Construccio::calcula-preu-total ""
     ?v <- (viatge (allotjaments $?as) (llocs-interes $?lls) (transports $?ts) (dies-ciutats $?ns))
     (not (preu-total-calculat ?v))
     (transports-seleccionats ?v)
@@ -665,77 +687,103 @@
     (assert (impresos 0))
 )
 
-; multislots de 1 en 1 en la part esquerra de la regla (maybe?)
+(defrule Construccio::fi-de-modul
+    (declare (salience -10))
+    (forall (viatge) (preu-total-calculat ?v))
+    =>
+    (focus Escriptura)
+)
 
-; Mòdul d'IMPRESIÓ dels RESULTATS
+; Mòdul d'ESCRIPTURA dels RESULTATS
 
-(defrule impresio-resultats ""
+(deftemplate Ciutats-Usades
+    (multislot ciutats)
+)
+
+(defrule Escriptura::inici-modul ""
+    (declare (salience 10))
+    =>
+    (assert (Ciutats-Usades) (ciutats (create$)))
+)
+
+(defrule Escriptura::impresio-resultats ""
     ?cl <- (client (pressupost ?pr))
     ?v <- (viatge (preu-total ?pt) (duracio ?d) (num-ciutats ?n) (ciutats $?cs) (allotjaments $?as)
             (dies-ciutats $?dpcs) (llocs-interes $?lls) (transports $?ts))
-    (preu-total-calculat ?v)
+    ?cu <- (Ciutats-Usades (ciutats $?cus))
     (not (impresos 2))
     (not (impres ?v))
     (impresos ?imp)
-    (test (<= ?pt ?pr))
     =>
-    (printout t "VIAJE RECOMENDADO " (+ ?imp 1)  ":" crlf)
-    (printout t "Precio total (persona): " ?pt " euros" crlf)
-    (printout t "Duración del viaje: " ?d " dias" crlf)
-    (printout t "Ciudades: ")
-    (loop-for-count (?i 1 (length$ ?cs)) do 
-        (printout t (send (nth$ ?i ?cs) get-nombre) " (" (nth$ ?i ?dpcs) " dias)")
-        (if (neq ?i (length$ ?cs)) then 
-            (printout t ", ")
+    (bind ?valid 1)
+    (bind ?i 1)
+    (bind ?list (create$))
+    (while (and (<= ?i (length$ ?cs)) (eq ?valid 1)) do 
+        (bind ?ciu (nth$ ?i ?cs))
+        (if (member$ ?ciu ?cus) then (bind ?valid 0))
+        (bind ?i (+ ?i 1))
+    )
+    (if (and (<= ?pt ?pr) (eq ?valid 1)) then
+        (printout t crlf)
+        (printout t "VIAJE RECOMENDADO " (+ ?imp 1)  ":" crlf)
+        (printout t "Precio total (persona): " ?pt " euros" crlf)
+        (printout t "Duración del viaje: " ?d " dias" crlf)
+        (printout t "Ciudades: ")
+        (loop-for-count (?i 1 (length$ ?cs)) do 
+            (bind ?ciu (nth$ ?i ?cs))
+            (printout t (send ?ciu get-nombre) " (" (nth$ ?i ?dpcs) " dias)")
+            (if (neq ?i (length$ ?cs)) then 
+                (printout t ", ")
+            )
+            (bind ?list (insert$ ?list (+ (length$ ?list) 1) ?ciu))
         )
-    )
-    (printout t crlf)
-    (printout t "Visitas: ")
-    (loop-for-count (?i 1 (length$ ?cs)) do
-        (bind ?c (nth$ ?i ?cs))
-        (printout t (send ?c get-nombre) ": ")
-        (loop-for-count (?j 1 (length$ ?lls)) do
-            (bind ?ll (nth$ ?j ?lls))
-            (if (eq ?c (send ?ll get-esta-en)) then (printout t (send ?ll get-nombre) ", "))
+        (printout t crlf)
+        (printout t "Visitas: ")
+        (loop-for-count (?i 1 (length$ ?cs)) do
+            (bind ?c (nth$ ?i ?cs))
+            (printout t (send ?c get-nombre) ": ")
+            (loop-for-count (?j 1 (length$ ?lls)) do
+                (bind ?ll (nth$ ?j ?lls))
+                (if (eq ?c (send ?ll get-esta-en)) then (printout t (send ?ll get-nombre) ", "))
+            )
         )
+        (printout t crlf)
+        (printout t "Alojamiento: ")
+        (loop-for-count (?i 1 (length$ ?cs)) do
+            (bind ?c (nth$ ?i ?cs))
+            (printout t (send ?c get-nombre) ": ")
+            (bind ?a (nth$ ?i ?as))
+            (printout t (send ?a get-nombre))
+            (if (neq ?i (length$ ?cs)) then (printout t ", "))
+        )
+        (printout t crlf)
+        (printout t "Viajes: ")
+        (loop-for-count (?i 1 (length$ ?ts)) do
+            (bind ?t (nth$ ?i ?ts))
+            (bind ?o (send ?t get-origen))
+            (bind ?d (send ?t get-destino))
+            (printout t (send ?o get-nombre) "-" (send ?d get-nombre) ": ")
+            (if (eq (class ?t) Bus) then (printout t "Bus"))
+            (if (eq (class ?t) Avión) then (printout t "Avion"))
+            (if (eq (class ?t) Tren) then (printout t "Tren"))
+            (if (eq (class ?t) Barco) then (printout t "Barco"))
+            (if (neq ?i (length$ ?ts)) then (printout t ", "))
+        )
+        (printout t crlf)
+        (printout t crlf)
+        (assert (impresos (+ ?imp 1)))
+        (assert (impres ?v))
+        (modify ?cu (ciutats (insert$ ?cus (+ (length$ ?cus) 1) ?list)))
     )
-    (printout t crlf)
-    (printout t "Alojamiento: ")
-    (loop-for-count (?i 1 (length$ ?cs)) do
-        (bind ?c (nth$ ?i ?cs))
-        (printout t (send ?c get-nombre) ": ")
-        (bind ?a (nth$ ?i ?as))
-        (printout t (send ?a get-nombre))
-        (if (neq ?i (length$ ?cs)) then (printout t ", "))
-    )
-    (printout t crlf)
-    (printout t "Viajes: ")
-    (loop-for-count (?i 1 (length$ ?ts)) do
-        (bind ?t (nth$ ?i ?ts))
-        (bind ?o (send ?t get-origen))
-        (bind ?d (send ?t get-destino))
-        (printout t (send ?o get-nombre) "-" (send ?d get-nombre) ": ")
-        (if (eq (class ?t) Bus) then (printout t "Bus"))
-        (if (eq (class ?t) Avion) then (printout t "Avion"))
-        (if (eq (class ?t) Tren) then (printout t "Tren"))
-        (if (eq (class ?t) Barco) then (printout t "Barco"))
-        (if (neq ?i (length$ ?ts)) then (printout t ", "))
-    )
-    (printout t crlf)
-    (assert (impresos (+ ?imp 1)))
-    (assert (impres ?v))
 )
 
-;(defrule cliente-e-interes
-;    ?p1 <- (object (is-a Cliente))
-;    =>
-;    (printout t "A " (send ?p1 get-nombre) " le gusta " (send ?p1 get-nombre-interes) crlf)
-;)
+(defrule Escriptura::impresio-fallida ""
+        (declare (salience -10))
+        (not (impresos 2))
+        =>
+        (printout t "Ho sentim, no hi ha viatges que s'ajustin a les teves restriccions." crlf)
+)
 
-;(defrule interes-y-lugar
-;    ?p1 <- (object (is-a Cliente) (nombre ?n1) (está_interesado_en ?i1))
-;    ?l1 <- (object (is-a Sitio_de_Interés) (satisface ?i2))
-;    (test (eq ?i1 ?i2))
-;    =>
-;    (printout t (send ?p1 get-nombre) " debería ir a " (send ?l1 get-nombre) ", le costará " (send ?l1 get-precio) crlf)
-;)
+; Dividir pressupost entre num_ciutats i agafar hotels amb preus mes baixos a allo.
+; Potser és més important escollir transport abans que allotjament.
+; multislots de 1 en 1 en la part esquerra de la regla (maybe?)
